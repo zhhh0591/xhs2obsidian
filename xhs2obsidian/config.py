@@ -23,6 +23,7 @@ class Config:
     dl_name_format: str = "发布时间 作者昵称 作品标题"
     dl_image_format: str = "JPEG"
     dl_video_cover: bool = False
+    dl_skip_downloaded: bool = True
 
     skip_empty: bool = True
     scaffold: bool = True
@@ -78,6 +79,7 @@ def load(path: str, vault: str | None = None) -> Config:
     c.dl_name_format = dl.get("name_format", c.dl_name_format)
     c.dl_image_format = dl.get("image_format", c.dl_image_format)
     c.dl_video_cover = dl.get("video_cover", c.dl_video_cover)
+    c.dl_skip_downloaded = dl.get("skip_downloaded", c.dl_skip_downloaded)
     c.skip_empty = b.get("skip_empty", c.skip_empty)
     c.scaffold = b.get("scaffold", c.scaffold)
     c.ocr_enabled = o.get("enabled", c.ocr_enabled)

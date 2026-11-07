@@ -31,6 +31,8 @@ name_format = "发布时间 作者昵称 作品标题"
 image_format = "JPEG"
 # 是否下载视频封面（封面上常有标题字，开了会多 OCR 一张图）
 video_cover = false
+# 跳过以前下载过的作品（记录在 XHS-Downloader/Volume/ExploreID.db）。删掉下载目录后想重新下载，改成 false
+skip_downloaded = true
 
 [build]
 # 正文去掉 #话题# 后不足 10 字、且没有 OCR / 转录文字的笔记不导入

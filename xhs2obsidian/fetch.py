@@ -25,7 +25,7 @@ def _import_xhs():
 
 
 def collect_links(links: list[str], file: str | None) -> str:
-    """命令行里的链接 + 文件里的内容。分享文案、短链、作品链接、作者主页链接都可以，XHS-Downloader 自己会提取。"""
+    """命令行里的链接 + 文件里的内容。作品链接、短链、整段分享文案都可以，XHS-Downloader 自己会从里面提取链接。"""
     text = " ".join(links)
     if file:
         with open(file, encoding="utf-8") as f:
@@ -49,7 +49,7 @@ async def _run(cfg, text: str) -> list[dict]:
         record_data=True,        # 写 ExploreData.db，里面有带 xsec_token 的原文链接
         folder_mode=False,
         author_archive=False,
-        download_record=True,    # 已下载过的作品自动跳过
+        download_record=cfg.dl_skip_downloaded,
         language="zh_CN",
     ) as xhs:
         return await xhs.extract(text, download=True)
@@ -61,6 +61,8 @@ def run(cfg, text: str, log=print) -> int:
         return 0
     os.makedirs(cfg.download_dir, exist_ok=True)
     result = asyncio.run(_run(cfg, text))
-    ok = [r for r in result if r]
-    log(f"下载：处理了 {len(result)} 个链接，成功取到 {len(ok)} 篇作品数据 → {cfg.download_dir}")
-    return len(ok)
+    ok = sum(1 for r in result if r and "作品ID" in r)
+    skipped = sum(1 for r in result if r and "作品ID" not in r)
+    log(f"下载：{len(result)} 个链接，成功 {ok} 篇，跳过 {skipped} 篇（之前下载过），"
+        f"失败 {len(result) - ok - skipped} 篇 → {cfg.download_dir}")
+    return ok

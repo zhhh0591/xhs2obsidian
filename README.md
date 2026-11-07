@@ -6,7 +6,7 @@
 小红书链接 ──下载──▶ 文字 / 图片 / 视频 ──OCR / 转录──▶ Obsidian 笔记 + 收藏地图
 ```
 
-- **下载**：内置 [XHS-Downloader](https://github.com/JoeanAmier/XHS-Downloader)（最新 master 源码），支持作品链接、分享文案、短链、作者主页
+- **下载**：内置 [XHS-Downloader](https://github.com/JoeanAmier/XHS-Downloader)（最新 master 源码），支持作品链接、分享文案和短链
 - **图片 OCR**：用 macOS 自带的 Vision 识别图片里的文字，完全离线
 - **视频转录**：用 [mlx-whisper](https://github.com/ml-explore/mlx-examples/tree/main/whisper) 在本机转写，不上传任何音视频
 - **生成笔记**：每篇一个 Markdown，带 frontmatter（作者、链接、互动数据、话题标签……），按主题分文件夹

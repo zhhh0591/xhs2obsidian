@@ -93,7 +93,7 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True, metavar="命令")
 
     def with_links(p):
-        p.add_argument("links", nargs="*", help="作品链接、分享文案或作者主页链接，可以写多个")
+        p.add_argument("links", nargs="*", help="作品链接或分享文案，可以写多个")
         p.add_argument("-f", "--file", help="从文本文件读取链接（一行一个，或直接粘贴分享文案）")
         return p
 
