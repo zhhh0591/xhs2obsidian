@@ -55,7 +55,7 @@ python -m xhs2obsidian run -f links.txt
 python -m xhs2obsidian run
 ```
 
-第一次转录视频时会自动下载 Whisper 模型（large-v3-turbo 约 1.6GB）。
+第一次转录视频时会自动下载 Whisper 模型（large-v3-turbo 约 1.6GB，运行时占约 3.5GB 内存）。8GB 内存的 Mac 建议转录时关掉其他大程序，或在配置里换成更小的模型。
 
 **想把自己的收藏 / 点赞全部导出？** 用 XHS-Downloader 自带的浏览器用户脚本（需要 Tampermonkey），
 它能在收藏页、点赞页批量提取作品链接，存成 `links.txt` 后交给 `run -f`。
