@@ -103,6 +103,16 @@ class RenderTest(unittest.TestCase):
         self.assertIn("ocr-images: 2", new)
         self.assertEqual(new.count("## 图片文字（OCR 提取）"), 1)
 
+    def test_update_without_new_text_keeps_old_sections(self):
+        tr = [{"text": "旧转录", "model": "m", "duration": "1分0秒"}]
+        md = build_note(self.note, "05 知识管理", [(1, "旧文字")], tr, today="2026-01-04")
+        self.assertEqual(update_note(md, [], []), md)  # 视频删了、没有新文字：原样保留
+        new = update_note(md, [(1, "新文字")], [])  # 只有 OCR 更新，转录保留
+        self.assertIn("旧转录", new)
+        self.assertIn("新文字", new)
+        self.assertLess(new.index("## 图片文字"), new.index("## 视频转录"))
+        self.assertIn("ocr-images: 1\ntranscript: true\ntags:", new)
+
     def test_prose_and_title(self):
         self.assertTrue(has_prose(self.note))
         self.note.title = ""

@@ -196,28 +196,46 @@ def _h2_outside_code(lines: list[str]):
 
 
 def update_note(text: str, ocr, transcripts) -> str:
-    """只替换「图片文字」「视频转录」两个小节和对应的 frontmatter 字段，其余内容（包括你写的笔记）不动。"""
-    lines = [ln for ln, h, _ in _h2_outside_code(text.split("\n")) if h not in MEDIA_HEADINGS]
+    """只替换「图片文字」「视频转录」两个小节和对应的 frontmatter 字段，其余内容（包括你写的笔记）不动。
 
-    headings = [(i, h) for i, (_, h, is_head) in enumerate(_h2_outside_code(lines)) if is_head]
-    anchor = next((i for want in ("原始话题标签", "我的理解") for i, h in headings if h == want), None)
-    new = media_lines(ocr, transcripts)
-    if new:
-        if anchor is None:
+    某一类这次没拿到文字（比如为了省空间把视频删了），就保留笔记里原有的那一节，不会清空。
+    """
+    new_ocr = media_lines(ocr, [])
+    new_tr = media_lines([], transcripts)
+    if not new_ocr and not new_tr:
+        return text
+    replace = {OCR_HEADING: bool(new_ocr), TRANSCRIPT_HEADING: bool(new_tr)}
+    lines = [ln for ln, h, _ in _h2_outside_code(text.split("\n")) if not replace.get(h)]
+
+    def insert(block: list[str], *before: str) -> None:
+        heads = [(i, h) for i, (_, h, is_head) in enumerate(_h2_outside_code(lines)) if is_head]
+        pos = next((i for want in before for i, h in heads if h == want), None)
+        if pos is None:
             if lines and lines[-1] != "":
                 lines.append("")
-            lines += new
+            lines.extend(block)
         else:
-            lines[anchor:anchor] = new
+            lines[pos:pos] = block
 
-    # frontmatter：ocr-images / transcript 放在 tags: 前面
+    # 顺序：原文 → 图片文字 → 视频转录 → 原始话题标签 → 我的理解
+    if new_tr:
+        insert(new_tr, "原始话题标签", "我的理解")
+    if new_ocr:
+        insert(new_ocr, TRANSCRIPT_HEADING, "原始话题标签", "我的理解")
+
+    # frontmatter：ocr-images、transcript 依次放在 tags: 前面
     if lines and lines[0] == "---" and "---" in lines[1:]:
         end = lines.index("---", 1)
-        fm = [ln for ln in lines[1:end] if not ln.startswith(("ocr-images:", "transcript:"))]
-        n_ocr = sum(1 for _, t in ocr if t.strip())
-        add = ([f"ocr-images: {n_ocr}"] if n_ocr else []) + \
-              (["transcript: true"] if any(t.get("text", "").strip() for t in transcripts) else [])
-        pos = fm.index("tags:") if "tags:" in fm else len(fm)
-        fm[pos:pos] = add
+        fm = lines[1:end]
+
+        def put(key: str, value: str, *before: str) -> None:
+            fm[:] = [ln for ln in fm if not ln.startswith(key + ":")]
+            pos = next((i for i, ln in enumerate(fm) if ln.startswith(before)), len(fm))
+            fm.insert(pos, f"{key}: {value}")
+
+        if new_tr:
+            put("transcript", "true", "tags:")
+        if new_ocr:
+            put("ocr-images", str(sum(1 for _, t in ocr if t.strip())), "transcript:", "tags:")
         lines = ["---", *fm, *lines[end:]]
     return "\n".join(lines)

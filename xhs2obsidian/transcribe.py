@@ -79,7 +79,8 @@ def run(cfg, notes, log=print) -> FileCache:
             log(f"  [{i}/{len(todo)}] {rec['duration']:>8} → {len(rec['text']):>5} 字"
                 f"（{time.time() - t0:.0f}s）  {os.path.basename(p)[:50]}")
         except RuntimeError as e:
-            cache.put(p, text="", error=str(e))
+            # 失败的不写缓存，下次运行会再试
             log(f"  [{i}/{len(todo)}] ✗ {e}  {os.path.basename(p)[:50]}")
+            continue
         cache.save()
     return cache

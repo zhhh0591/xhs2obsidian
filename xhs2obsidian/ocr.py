@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import time
 
 from .cache import FileCache
 
@@ -49,15 +50,25 @@ def run(cfg, notes, log=print) -> FileCache:
     todo = [p for n in notes.values() for _, p in n.images if cache.get(p) is None]
     total = sum(len(n.images) for n in notes.values())
     log(f"OCR：共 {total} 张图片，{total - len(todo)} 张已有缓存，{len(todo)} 张待识别")
+    failed = 0
     for i, p in enumerate(todo, 1):
-        try:
-            text = recognize(p, cfg.ocr_languages)
-            cache.put(p, text=text)
-            log(f"  [{i}/{len(todo)}] {len(text):>5} 字  {os.path.basename(p)[:60]}")
-        except RuntimeError as e:
-            cache.put(p, text="", error=str(e))
-            log(f"  [{i}/{len(todo)}] ✗ {e}  {os.path.basename(p)[:60]}")
+        for attempt in range(3):
+            try:
+                text = recognize(p, cfg.ocr_languages)
+                break
+            except RuntimeError as e:
+                err = e
+                time.sleep(1 + attempt)  # Vision 偶尔因神经网络引擎被占用而失败，稍等重试
+        else:
+            # 失败的不写缓存，下次运行会再试
+            failed += 1
+            log(f"  [{i}/{len(todo)}] ✗ {str(err)[:80]}  {os.path.basename(p)[:50]}")
+            continue
+        cache.put(p, text=text)
+        log(f"  [{i}/{len(todo)}] {len(text):>5} 字  {os.path.basename(p)[:60]}")
         if i % 20 == 0:
             cache.save()
     cache.save()
+    if failed:
+        log(f"  {failed} 张识别失败，没有写入缓存，下次运行会重试（同时在跑转录等占用芯片的任务时更容易失败）")
     return cache
