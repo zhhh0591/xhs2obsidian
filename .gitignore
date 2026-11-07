@@ -1,0 +1,25 @@
+# 个人配置：里面可能有 Cookie 和本机路径，绝不提交
+config.toml
+.env
+settings.json
+
+# XHS-Downloader 运行时生成的数据（下载记录、作者映射等）
+XHS-Downloader/Volume/
+
+# 下载内容和缓存：是别人的作品，不要上传
+Download/
+.xhs2obsidian/
+*.db
+*.wav
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# 系统
+.DS_Store

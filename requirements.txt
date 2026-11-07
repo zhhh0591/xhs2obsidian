@@ -1,0 +1,10 @@
+# 下载（XHS-Downloader 的依赖，版本跟随上游）
+-r XHS-Downloader/requirements.txt
+
+# 图片 OCR：macOS 自带的 Vision 框架
+pyobjc-framework-Vision>=10.0; sys_platform == "darwin"
+pyobjc-framework-Quartz>=10.0; sys_platform == "darwin"
+
+# 视频转录：mlx-whisper，需要 Apple Silicon
+mlx-whisper>=0.4; sys_platform == "darwin" and platform_machine == "arm64"
+numpy>=1.24

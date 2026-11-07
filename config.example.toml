@@ -1,0 +1,73 @@
+# xhs2obsidian 配置示例
+# 复制一份：cp config.example.toml config.toml，然后改下面的路径。
+# config.toml 已写进 .gitignore，不会被提交。
+
+[paths]
+# 下载目录：作品的 md、ExploreData.db、图片和视频都放这里。
+# 如果你之前单独用过 XHS-Downloader，填它 settings.json 里 work_path + folder_name 拼起来的目录即可接着用。
+download_dir = "~/Documents/小红书下载"
+
+# Obsidian 库（vault）的根目录
+vault = "~/Documents/Obsidian/MyVault"
+
+# 笔记写到库里的哪个子目录（相对 vault），下面再按主题分子文件夹
+notes_dir = "10 Sources/小红书收藏"
+
+# 收藏地图写到哪里（相对 vault）；设为 "" 则不生成
+map_file = "50 Maps/小红书收藏地图.md"
+
+# OCR / 转录结果的缓存目录；留空 = <download_dir>/.xhs2obsidian
+cache_dir = ""
+
+[download]
+# 小红书网页版 Cookie。不填也能下载大部分公开作品。
+# 更推荐用环境变量传入，避免写进文件：export XHS_COOKIE='...'
+cookie = ""
+# 网络代理，例如 "http://127.0.0.1:7890"；留空不用代理
+proxy = ""
+# 文件命名格式，可用字段见 XHS-Downloader 文档（发布时间 作者昵称 作品标题 作品ID 作品类型 作品描述 作品标签 …）
+name_format = "发布时间 作者昵称 作品标题"
+# 图片格式：JPEG / PNG / WEBP / HEIC / AUTO。macOS 的 OCR 都能读，JPEG 兼容性最好
+image_format = "JPEG"
+# 是否下载视频封面（封面上常有标题字，开了会多 OCR 一张图）
+video_cover = false
+
+[build]
+# 正文去掉 #话题# 后不足 10 字、且没有 OCR / 转录文字的笔记不导入
+skip_empty = true
+# 在每篇笔记末尾留「我的理解 / 相关概念 / 下一步行动」空白小节
+scaffold = true
+
+[ocr]
+# 用 macOS 自带的 Vision 识别图片里的文字（离线）
+enabled = true
+languages = ["zh-Hans", "en-US"]
+
+[transcribe]
+# 用 mlx-whisper 在本机转录视频（需要 Apple Silicon）
+enabled = true
+model = "mlx-community/whisper-large-v3-turbo"
+language = "zh"
+# 提示词里列出可能出现的专有名词，能明显减少错字
+prompt = "以下是简体中文普通话视频内容，请输出带标点符号的规范文本。可能出现的专有名词：Obsidian、ChatGPT、Claude、Codex、Agent、MCP、Python、GitHub。"
+
+[topics]
+# 主题 = 子文件夹名，前面的数字只用来排序。
+# 新笔记按关键词打分：标题命中 3 分、标签 2 分、正文 1 分，取最高分的主题；全是 0 分就归入 default。
+# 纯英文关键词按整词匹配，不区分大小写。
+# 已经在库里的笔记不会被重新归类——你手动挪过的文件夹会被保留。
+default = "99 未分类"
+
+[topics.keywords]
+"01 AI与Agent" = ["AI", "Agent", "Claude", "ChatGPT", "GPT", "Codex", "MCP", "Skill", "大模型", "提示词", "Prompt"]
+"02 求职与简历" = ["简历", "求职", "面试", "秋招", "春招", "实习", "offer", "LinkedIn", "职场"]
+"03 科研与PhD" = ["科研", "论文", "PhD", "博士", "读博", "导师", "文献", "学术", "研究生"]
+"04 开发与工具" = ["编程", "代码", "Python", "GitHub", "开源", "工具", "插件", "ESP32"]
+"05 知识管理与成长" = ["Obsidian", "笔记", "知识管理", "成长", "自律", "思维", "复盘"]
+"06 训练与体态" = ["健身", "训练", "体态", "跑步", "篮球", "拉伸"]
+"07 英语学习" = ["英语", "雅思", "托福", "外刊", "单词", "口语"]
+"08 留学与校园" = ["留学", "大学", "校园", "美本", "申请"]
+
+[topics.overrides]
+# 手动指定某一篇的主题（作品 ID = 主题），优先级最高。例如：
+# "0123456789abcdef01234567" = "03 科研与PhD"
