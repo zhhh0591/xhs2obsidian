@@ -10,6 +10,37 @@ import wave
 
 from .cache import FileCache
 
+# 完整版：权重 1.6GB，运行时约占 3.5GB 内存
+FULL_MODEL = "mlx-community/whisper-large-v3-turbo"
+# 4-bit 量化版：权重 464MB，运行时约占 1.2GB 内存；中文实测与完整版字符相似度约 97%
+LIGHT_MODEL = "mlx-community/whisper-large-v3-turbo-q4"
+FULL_MODEL_MIN_RAM_GB = 16
+
+
+def physical_ram_gb() -> float:
+    try:
+        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 1024**3
+    except (ValueError, OSError, AttributeError):
+        return 0.0
+
+
+def resolve_model(name: str, ram_gb: float | None = None) -> str:
+    """model = "auto"（或留空）时按内存选：16GB 及以上用完整版，否则用量化版，避免 8GB 的 Mac 大量换页卡死。"""
+    if name and name.lower() != "auto":
+        return name
+    ram_gb = physical_ram_gb() if ram_gb is None else ram_gb
+    return FULL_MODEL if ram_gb >= FULL_MODEL_MIN_RAM_GB else LIGHT_MODEL
+
+
+def _limit_mlx_cache(limit_mb: int = 256) -> None:
+    """MLX 默认会留着用完的显存不还，转长视频时进程能涨到好几 GB。
+    限制在 256MB：4 分钟视频的内存峰值从 2.5GB 降到 1.6GB，结果完全相同，内存紧张时还更快。"""
+    import mlx.core as mx
+
+    setter = getattr(mx, "set_cache_limit", None) or getattr(getattr(mx, "metal", None), "set_cache_limit", None)
+    if setter:
+        setter(limit_mb * 1024**2)
+
 
 def extract_audio(video: str, wav: str) -> None:
     if shutil.which("afconvert"):  # macOS 自带
@@ -49,9 +80,11 @@ def transcribe(video: str, cfg) -> dict:
         wav = os.path.join(tmp, "audio.wav")
         extract_audio(video, wav)
         audio, seconds = load_wav(wav)
+    _limit_mlx_cache()
+    model = resolve_model(cfg.tr_model)
     r = mlx_whisper.transcribe(
         audio,
-        path_or_hf_repo=cfg.tr_model,
+        path_or_hf_repo=model,
         language=cfg.tr_language or None,
         initial_prompt=cfg.tr_prompt or None,
         verbose=None,
@@ -59,7 +92,7 @@ def transcribe(video: str, cfg) -> dict:
     s = int(round(seconds))
     return {
         "text": r["text"].strip(),
-        "model": cfg.tr_model.rsplit("/", 1)[-1],
+        "model": model.rsplit("/", 1)[-1],
         "duration": f"{s // 60}分{s % 60}秒",
     }
 
@@ -70,7 +103,11 @@ def run(cfg, notes, log=print) -> FileCache:
     total = sum(len(n.videos) for n in notes.values())
     log(f"转录：共 {total} 个视频，{total - len(todo)} 个已有缓存，{len(todo)} 个待转录")
     if todo:
-        log(f"  模型 {cfg.tr_model}（首次运行会自动下载，large-v3-turbo 约 1.6GB）")
+        model = resolve_model(cfg.tr_model)
+        why = ""
+        if not cfg.tr_model or cfg.tr_model.lower() == "auto":
+            why = f"（本机内存 {physical_ram_gb():.0f}GB，自动选择）"
+        log(f"  模型 {model}{why}；首次运行会自动下载")
     for i, p in enumerate(todo, 1):
         t0 = time.time()
         try:

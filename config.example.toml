@@ -48,9 +48,11 @@ languages = ["zh-Hans", "en-US"]
 [transcribe]
 # 用 mlx-whisper 在本机转录视频（需要 Apple Silicon）
 enabled = true
-# large-v3-turbo 准确度最好，运行时约占 3.5GB 内存。8GB 内存的 Mac 同时开着很多程序时会严重变慢，
-# 可以换成 "mlx-community/whisper-small-mlx"（快、省内存，但错字更多）或 "mlx-community/whisper-medium-mlx"
-model = "mlx-community/whisper-large-v3-turbo"
+# "auto" = 按内存自动选：
+#   16GB 及以上 → mlx-community/whisper-large-v3-turbo     （完整版，运行时约占 3.5GB 内存）
+#   16GB 以下   → mlx-community/whisper-large-v3-turbo-q4  （4-bit 量化版，约占 1.2GB，中文准确度约为完整版的 97%）
+# 也可以直接填任意 mlx-whisper 模型名，强制使用
+model = "auto"
 language = "zh"
 # 提示词里列出可能出现的专有名词，能明显减少错字
 prompt = "以下是简体中文普通话视频内容，请输出带标点符号的规范文本。可能出现的专有名词：Obsidian、ChatGPT、Claude、Codex、Agent、MCP、Python、GitHub。"

@@ -32,7 +32,7 @@ class Config:
     ocr_languages: list[str] = field(default_factory=lambda: ["zh-Hans", "en-US"])
 
     tr_enabled: bool = True
-    tr_model: str = "mlx-community/whisper-large-v3-turbo"
+    tr_model: str = "auto"
     tr_language: str = "zh"
     tr_prompt: str = ""
 

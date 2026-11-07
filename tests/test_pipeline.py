@@ -119,6 +119,15 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(derive_title(self.note), "第一行正文，讲怎么用 Obsidian 记笔记")
 
 
+class ModelChoiceTest(unittest.TestCase):
+    def test_auto_model(self):
+        from xhs2obsidian.transcribe import FULL_MODEL, LIGHT_MODEL, resolve_model
+        self.assertEqual(resolve_model("auto", ram_gb=8), LIGHT_MODEL)
+        self.assertEqual(resolve_model("", ram_gb=16), FULL_MODEL)
+        self.assertEqual(resolve_model("mlx-community/whisper-small-mlx", ram_gb=8),
+                         "mlx-community/whisper-small-mlx")  # 手动指定的不改
+
+
 class TopicTest(unittest.TestCase):
     def test_classify(self):
         cfg = Config(download_dir="", vault="", topic_keywords={
